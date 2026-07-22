@@ -4,6 +4,7 @@ const cors = require("cors")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken")
 const userModel = require("./models/user.js")
+const postModel = require("./models/posts.js")
 
 let app = express()
 app.use(express.json())
@@ -39,6 +40,7 @@ app.post("/signup", async (req, res) => {
                 res.json({ "status": "Success" })            //only one res is in an api
             }
 
+
         }
     ).catch()
 
@@ -55,25 +57,24 @@ app.post("/signin", async (req, res) => {
 
         (items) => {
             if (items.length > 0) {
-                const passwordValidator= bcrypt.compareSync(req.body.password, items[0].password)
-                if(passwordValidator){
+                const passwordValidator = bcrypt.compareSync(req.body.password, items[0].password)
+                if (passwordValidator) {
 
-                    jwt.sign({ email: req.body.email }, "blogApp", {expiresIn: "1d"}, (err, token) => {
-                        if(err) {
+                    jwt.sign({ email: req.body.email }, "blogApp", { expiresIn: "1d" }, (err, token) => {
+                        if (err) {
                             res.json({ "status": "error", "error": err })
                         }
                         else {
-                            res.json({ "status": "Success", "token": token ,"user": items[0]._id})           //token is generated and sent to the user.token is used to verify the user and to check if the user is logged in or not. it is used for security purpose.
+                            res.json({ "status": "Success", "token": token, "user": items[0]._id })           //token is generated and sent to the user.token is used to verify the user and to check if the user is logged in or not. it is used for security purpose.
                         }
 
                     })
                 }
-                else{
+                else {
                     res.json({ "status": "invalid password" })
                 }
             }
-            else
-            {
+            else {
                 res.json({ "status": "invalid email" })
             }
         }
@@ -81,6 +82,28 @@ app.post("/signin", async (req, res) => {
     ).catch()
 
 })
+
+
+//create a post
+app.post("/create", async (req, res) => {
+
+    let input = req.body
+    let token = req.headers.token        //token is sent in the header of the request. it is used to verify the user and to check if the user is logged in or not. it is used for security purpose.
+    jwt.verify(token, "blogApp", async (err, decoded) => {
+
+        if (decoded && decoded.email) {
+            let result=new postModel(input)
+            await result.save()
+            res.json({ "status": "Success" })
+        }
+        else {
+            res.json({ "status": "Invalid authentication" })
+        }
+
+    })
+
+})
+
 
 
 app.listen(2000, () => {
