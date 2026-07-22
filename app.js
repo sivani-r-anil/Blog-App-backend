@@ -134,6 +134,36 @@ app.post("/viewall", async (req, res) => {
 })
 
 
+//View my posts
+app.post("/viewMypost", async (req, res) => {
+
+    let input = req.body
+    let token = req.headers.token        //token is sent in the header of the request. it is used to verify the user and to check if the user is logged in or not. it is used for security purpose.
+    jwt.verify(token, "blogApp", async (err, decoded) => {
+
+        if (decoded && decoded.email) {
+            postModel.find(input).then(
+
+                (items) => {
+                    res.json(items)
+                }
+
+            ).catch(
+
+                (error) => {
+                    res.json({ "status": error })
+                }
+
+            )
+        }
+        else {
+            res.json({ "status": "Invalid authentication" })
+        }
+
+    })
+})
+
+
 
     app.listen(2000, () => {
         console.log("Server is running on port 2000")
